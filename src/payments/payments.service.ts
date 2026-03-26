@@ -99,5 +99,67 @@ export class PaymentsService {
     );
 
     order.momoOrderId = momoOrderId;
+    order.momoRequestId = requestId;
+    order.paymentMethod = 'momo';
+    await order.save();
+
+    return data;
+  }
+
+  verifyMomoCallbackSignature(body: any): boolean {
+    const accessKey = this.configService.get<string>('MOMO_ACCESS_KEY');
+    if (!accessKey) {
+      return false;
+    }
+    const rawSignature =
+      `accessKey=${accessKey}` +
+      `&amount=${body.amount}` +
+      `&extraData=${body.extraData || ''}` +
+      `&message=${body.message}` +
+      `&orderId=${body.orderId}` +
+      `&orderInfo=${body.orderInfo}` +
+      `&orderType=${body.orderType}` +
+      `&partnerCode=${body.partnerCode}` +
+      `&payType=${body.payType}` +
+      `&requestId=${body.requestId}` +
+      `&responseTime=${body.responseTime}` +
+      `&resultCode=${body.resultCode}` +
+      `&transId=${body.transId}`;
+
+    const expectedSignature = this.sign(rawSignature);
+    return expectedSignature === body.signature;
+  }
+
+  async handleMomoIpn(body: any) {
+    const isValidSignature = this.verifyMomoCallbackSignature(body);
+    if (!isValidSignature) {
+      return { resultCode: 13, message: 'Merchant authentication failed.' };
+    }
+
+    const order = await this.orderModel.findOne({
+      momoOrderId: body.orderId,
+      momoRequestId: body.requestId,
+    });
+
+    if (!order) {
+      return {
+        resultCode: 42,
+        message: 'Invalid orderId or orderId is not found.',
+      };
+    }
+
+    if (Number(order.total) !== Number(body.amount)) {
+      return { resultCode: 1, message: 'Amount mismatch' };
+    }
+
+    if (body.resultCode === 0) {
+      order.paymentStatus = 'PAID';
+      order.momoTransId = body.transId;
+      await order.save();
+      return { resultCode: 0, message: 'Successful.' };
+    }
+    order.paymentStatus = 'FAILED';
+    await order.save();
+    return { resultCode: 0, message: 'Received.' };
   }
 }
