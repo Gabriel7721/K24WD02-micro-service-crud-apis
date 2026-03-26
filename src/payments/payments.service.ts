@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { InjectModel } from '@nestjs/mongoose';
@@ -14,12 +14,16 @@ export class PaymentsService {
     @InjectModel(Order.name) private readonly orderModel: Model<Order>,
   ) {}
 
-  // private sign(rawSignature: string): string {
-  //   const secretKey = this.configService.get<string>('MOMO_SECRET_KEY');
-  //   if (!secretKey) {
-  //     throw new Error('secretkey is not provided');
-  //   }
+  private sign(rawSignature: string): string {
+    const secretKey = this.configService.get<string>('MOMO_SECRET_KEY');
 
-  //   return crypto.createHmac('sha256', secretKey);
-  // }
+    if (!secretKey) {
+      throw new InternalServerErrorException('MOMO_SECRET_KEY is not provided');
+    }
+
+    return crypto
+      .createHmac('sha256', secretKey)
+      .update(rawSignature)
+      .digest('hex');
+  }
 }
