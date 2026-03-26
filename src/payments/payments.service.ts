@@ -56,7 +56,7 @@ export class PaymentsService {
 
     const momoOrderId = `ORDER_${order._id}_${Date.now()}`;
     const requestId = `REQ_${order._id}_${Date.now()}`;
-    const amount = order.total;
+    const amount = this.convertedToVND(order.total);
     const orderInfo = `Thanh toan don hang ${order._id}`;
     const extraData = Buffer.from(
       JSON.stringify({ internalOrderId: String(order._id) }),
@@ -101,6 +101,7 @@ export class PaymentsService {
     order.momoOrderId = momoOrderId;
     order.momoRequestId = requestId;
     order.paymentMethod = 'momo';
+    order.paymentStatus = 'PAID';
     await order.save();
 
     return data;
@@ -161,5 +162,11 @@ export class PaymentsService {
     order.paymentStatus = 'FAILED';
     await order.save();
     return { resultCode: 0, message: 'Received.' };
+  }
+
+  convertedToVND(orderTotal: number): number {
+    const rate = Number(process.env.MOMO_CONVERT_RATE);
+    const amount = Math.round(Number(orderTotal) * rate);
+    return amount;
   }
 }
