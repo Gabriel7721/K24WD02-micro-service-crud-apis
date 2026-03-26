@@ -97,14 +97,23 @@ export class PaymentsService {
         timeout: 30000,
       }),
     );
+    try {
+      order.momoOrderId = momoOrderId;
+      order.momoRequestId = requestId;
+      order.paymentMethod = 'momo';
+      order.paymentStatus = 'PAID';
+      await order.save();
 
-    order.momoOrderId = momoOrderId;
-    order.momoRequestId = requestId;
-    order.paymentMethod = 'momo';
-    order.paymentStatus = 'PAID';
-    await order.save();
-
-    return data;
+      return data;
+    } catch (error) {
+      const momoError = error?.response?.data;
+      if (momoError) {
+        throw new BadRequestException({
+          message: momoError.message,
+          resultCode: momoError.resultCode,
+        });
+      }
+    }
   }
 
   verifyMomoCallbackSignature(body: any): boolean {

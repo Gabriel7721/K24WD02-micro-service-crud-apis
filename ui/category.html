@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Category UI</title>
+  </head>
+  <body> 
+    <div>
+      <a href="./category.html">Category</a>
+      <a href="./menu.html">Menu</a>
+      <a href="./order.html">Order</a>
+      <a href="./user.html">User</a>
+    </div>
+
+    <hr />
+
+    <h1>Create Category</h1>
+
+    <input placeholder="Category name" />
+    <button>Create</button>
+
+    <div></div>
+
+    <script>
+      const API_URL = 'http://localhost:9999/category';
+      const $ = (id) => document.getElementById(id);
+      const showMessage = (msg) => ($('message').textContent = msg);
+
+      async function handleResponse(res) {
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.message || 'Request failed');
+        return data;
+      }
+
+      async function createCategory() {}
+    </script>
+  </body>
+</html>

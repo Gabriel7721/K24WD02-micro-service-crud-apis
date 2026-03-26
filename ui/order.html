@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Order UI</title>
+  </head>
+  <body>
+    <div>
+      <a href="./category.html">Category</a>
+      <a href="./menu.html">Menu</a>
+      <a href="./order.html">Order</a>
+      <a href="./user.html">User</a>
+    </div>
+
+    <hr />
+
+    <h1>Create Order</h1>
+
+    <div>
+      <label>User:</label>
+      <select id="user">
+        <option value="">Select user</option>
+      </select>
+    </div>
+
+    <br />
+
+    <div>
+      <label>Menu:</label>
+      <select id="menu">
+        <option value="">Select menu item</option>
+      </select>
+      <button onclick="addItem()">Add Item</button>
+    </div>
+
+    <h3>Selected Items</h3>
+    <ul id="itemList"></ul>
+
+    <div>
+      <label>Payment Method:</label>
+      <select id="paymentMethod">
+        <option value="cash">Cash</option>
+        <option value="momo">Momo</option>
+      </select>
+    </div>
+    <button onclick="createOrder()">Create Order</button>
+    <button onclick="clearItems()">Clear Items</button>
+
+    <div id="message"></div>
+    <div id="paymentBox"></div>
+
+    <script>
+      const USER_APIS = [
+        'http://localhost:9999/users',
+        'http://localhost:9999/user',
+      ];
+      const MENU_API = 'http://localhost:9999/menu';
+      const ORDER_API = 'http://localhost:9999/order';
+
+      const $ = (id) => document.getElementById(id);
+      const showMessage = (msg) => ($('message').textContent = msg);
+
+      let selectedItems = [];
+      let menus = [];
+
+      async function handleResponse(res) {
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.message || 'Request failed');
+        return data;
+      }
+
+      async function fetchFirstOk(urls) {
+        for (const url of urls) {
+          try {
+            const res = await fetch(url);
+            if (res.ok) return await handleResponse(res);
+          } catch {}
+        }
+        throw new Error('Cannot load users. Please check user route.');
+      }
+
+      async function loadUsers() {
+        try {
+          const data = await fetchFirstOk(USER_APIS);
+          $('user').innerHTML =
+            '<option value="">Select user</option>' +
+            data
+              .map(
+                (u) =>
+                  `<option value="${u._id || u.id}">${u.username || u.name || u.email || 'User'}</option>`,
+              )
+              .join('');
+        } catch (err) {
+          showMessage(err.message);
+        }
+      }
+
+      async function loadMenus() {
+        try {
+          menus = await handleResponse(await fetch(MENU_API));
+          $('menu').innerHTML =
+            '<option value="">Select menu item</option>' +
+            menus
+              .map(
+                (m) =>
+                  `<option value="${m._id}">${m.name}${m.price != null ? ' - ' + m.price : ''}</option>`,
+              )
+              .join('');
+        } catch (err) {
+          showMessage(err.message);
+        }
+      }
+
+      function renderItems() {
+        $('itemList').innerHTML = selectedItems.length
+          ? selectedItems
+              .map(
+                (id, index) => `
+                  <li>
+                    ${menus.find((m) => m._id === id)?.name || id}
+                    <button onclick="removeItem(${index})">Remove</button>
+                  </li>
+                `,
+              )
+              .join('')
+          : '<li>No item selected</li>';
+      }
+
+      function addItem() {
+        const id = $('menu').value;
+        if (!id) return showMessage('Please select a menu item.');
+        selectedItems.push(id);
+        renderItems();
+        showMessage('Item added.');
+      }
+
+      function removeItem(index) {
+        selectedItems.splice(index, 1);
+        renderItems();
+        showMessage('Item removed.');
+      }
+
+      function clearItems() {
+        selectedItems = [];
+        renderItems();
+        showMessage('Items cleared.');
+      }
+
+      let lastOrderId = null;
+
+      async function createOrder() {}
+      const PAYMENT_API = 'http://localhost:9999/payments/momo';
+
+      async function payWithMomo() {}
+
+      const params = new URLSearchParams(window.location.search);
+      const resultCode = params.get('resultCode');
+      const message = params.get('message');
+
+      if (resultCode !== null) {
+        document.getElementById('message').textContent =
+          resultCode === '0'
+            ? `Payment success: ${message || ''}`
+            : `Payment failed: ${message || ''}`;
+      }
+
+      loadUsers();
+      loadMenus();
+      renderItems();
+    </script>
+  </body>
+</html>

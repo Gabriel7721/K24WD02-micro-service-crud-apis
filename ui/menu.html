@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Menu UI</title>
+  </head>
+  <body>
+    <div>
+      <a href="./category.html">Category</a>
+      <a href="./menu.html">Menu</a>
+      <a href="./order.html">Order</a>
+      <a href="./user.html">User</a>
+    </div>
+
+    <hr />
+
+    <h1>Create Menu</h1>
+
+    <input placeholder="Menu name" />
+    <input type="number" placeholder="Price" />
+
+    <select>
+      <option value="">Select category</option>
+    </select>
+
+    <button>Create</button>
+
+    <div></div>
+
+    <script>
+      const CATEGORY_API = 'http://localhost:9999/category';
+      const MENU_API = 'http://localhost:9999/menu';
+      const $ = (id) => document.getElementById(id);
+      const showMessage = (msg) => ($('message').textContent = msg);
+
+      async function handleResponse(res) {
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.message || 'Request failed');
+        return data;
+      }
+
+      async function loadCategories() {
+        try {
+          const data = await handleResponse(await fetch(CATEGORY_API));
+          $('category').innerHTML =
+            '<option value="">Select category</option>' +
+            data
+              .map((cat) => `<option value="${cat._id}">${cat.name}</option>`)
+              .join('');
+        } catch (err) {
+          showMessage(err.message);
+        }
+      }
+
+      async function createMenu() {}
+
+      loadCategories();
+    </script>
+  </body>
+</html>
