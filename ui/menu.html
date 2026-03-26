@@ -16,16 +16,16 @@
 
     <h1>Create Menu</h1>
 
-    <input placeholder="Menu name" />
-    <input type="number" placeholder="Price" />
+    <input id="name" placeholder="Menu name" />
+    <input id="price" type="number" placeholder="Price" />
 
-    <select>
+    <select id="category">
       <option value="">Select category</option>
     </select>
 
-    <button>Create</button>
+    <button onclick="createMenu()">Create</button>
 
-    <div></div>
+    <div id="message"></div>
 
     <script>
       const CATEGORY_API = 'http://localhost:9999/category';
@@ -52,7 +52,42 @@
         }
       }
 
-      async function createMenu() {}
+      async function createMenu() {
+        const name = $('name').value.trim();
+        const priceValue = $('price').value;
+        const category = $('category').value;
+
+        if (!name) {
+          return showMessage("Menu's item name is required.");
+        }
+        if (!priceValue) {
+          return showMessage("Menu's item price is required.");
+        }
+        if (!category) {
+          return showMessage("Menu's item Category is required.");
+        }
+
+        try {
+          const data = await handleResponse(
+            await fetch(MENU_API, {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({
+                name,
+                price: Number(priceValue),
+                category,
+              }),
+            }),
+          );
+
+          $('name').value = '';
+          $('price').value = '';
+          $('category').value = '';
+          showMessage(`Created menu item successfully: "${data.name}"`);
+        } catch (error) {
+          showMessage(error.message);
+        }
+      }
 
       loadCategories();
     </script>
