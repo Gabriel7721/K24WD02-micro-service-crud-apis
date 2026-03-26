@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <title>Category UI</title>
   </head>
-  <body> 
+  <body>
     <div>
       <a href="./category.html">Category</a>
       <a href="./menu.html">Menu</a>
@@ -16,10 +16,9 @@
 
     <h1>Create Category</h1>
 
-    <input placeholder="Category name" />
-    <button>Create</button>
-
-    <div></div>
+    <input id="name" placeholder="Category name" />
+    <button onclick="createCategory()">Create</button>
+    <div id="message"></div>
 
     <script>
       const API_URL = 'http://localhost:9999/category';
@@ -32,7 +31,25 @@
         return data;
       }
 
-      async function createCategory() {}
+      async function createCategory() {
+        const name = $('name').value.trim();
+        if (!name) {
+          return showMessage('Name is required.');
+        }
+        try {
+          const data = await handleResponse(
+            await fetch(API_URL, {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({ name }),
+            }),
+          );
+          $('name').value = '';
+          showMessage(`Created category successfully: "${data.name}"`);
+        } catch (error) {
+          showMessage(error.message);
+        }
+      }
     </script>
   </body>
 </html>
