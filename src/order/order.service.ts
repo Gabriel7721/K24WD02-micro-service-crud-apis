@@ -17,8 +17,25 @@ export class OrderService {
     private readonly menuService: MenuService,
   ) {}
 
+  // NOTE: CASE1: Không trả về id duplicated
+  // async caculatedTotal(itemIds: string[]): Promise<number> {
+  //   const items = await this.menuModel.find({ _id: { $in: itemIds } });
+  //   return items.reduce((total, item) => total + item.price, 0);
+  // }
+  // NOTE: CASE2: Query sequential
+  // async caculatedTotal(itemIds: string[]): Promise<number> {
+  //   let total = 0;
+  //   for (const id of itemIds) {
+  //     const item = await this.menuService.findOne(id);
+  //     total += item.price;
+  //   }
+  //   return total;
+  // }
+  // NOTE: CASE3: Promise.all chạy song song parallel
   async caculatedTotal(itemIds: string[]): Promise<number> {
-    const items = await this.menuModel.find({ _id: { $in: itemIds } });
+    const items = await Promise.all(
+      itemIds.map((id) => this.menuService.findOne(id)),
+    );
     return items.reduce((total, item) => total + item.price, 0);
   }
 
@@ -60,7 +77,7 @@ export class OrderService {
       .findByIdAndUpdate(
         id,
         { ...dto, ...(total != undefined ? { total } : {}) },
-        { new: true },
+        { returnDocument: 'after' },
       )
       .populate('user')
       .populate('item')

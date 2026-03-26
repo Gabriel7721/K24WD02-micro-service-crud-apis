@@ -8,21 +8,10 @@ export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'CANCELLED';
 export class Order extends Document {
   @Prop({ type: Types.ObjectId, ref: User.name })
   user: Types.ObjectId;
-  @Prop({ type: Types.ObjectId, ref: Menu.name })
-  item: Types.ObjectId;
+  @Prop({ type: [Types.ObjectId], ref: Menu.name })
+  item: Menu[];
   @Prop()
   total: number;
-
-  @Prop({ default: 'cash' })
-  paymentMethod: 'cash' | 'momo';
-  @Prop({ default: 'PENDING' })
-  paymentStatus: PaymentStatus;
-  @Prop()
-  momoOrderId?: string;
-  @Prop()
-  momoRequestId?: string;
-  @Prop()
-  momoTransId?: string;
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);
