@@ -148,10 +148,56 @@
 
       let lastOrderId = null;
 
-      async function createOrder() {}
+      async function createOrder() {
+        const user = $('user').value;
+
+        if (!user) {
+          return showMessage('User is required.');
+        }
+        if (!selectedItems.length) {
+          return showMessage('At least one item is required.');
+        }
+
+        try {
+          const data = await handleResponse(
+            await fetch(ORDER_API, {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({
+                user,
+                item: selectedItems,
+              }),
+            }),
+          );
+          lastOrderId = data._id;
+          $('user').value = '';
+          clearItems();
+          showMessage(`Created order. Total "${data.total}"`);
+          $('paymentBox').innerHTML =
+            `<button onclick="payWithMomo()">Pay with MOMO</button>`;
+        } catch (error) {
+          showMessage(error.message);
+        }
+      }
       const PAYMENT_API = 'http://localhost:9999/payments/momo';
 
-      async function payWithMomo() {}
+      async function payWithMomo() {
+        if (!lastOrderId) {
+          return showMessage('No order to pay.');
+        }
+
+        try {
+          const data = await handleResponse(
+            await fetch(`${PAYMENT_API}/${lastOrderId}`, { method: 'POST' }),
+          );
+          showMessage('Redirecting to MOMO...');
+          if (data.payUrl) {
+            window.open(data.payUrl, '_blank');
+          }
+        } catch (error) {
+          showMessage(error.message);
+        }
+      }
 
       const params = new URLSearchParams(window.location.search);
       const resultCode = params.get('resultCode');
