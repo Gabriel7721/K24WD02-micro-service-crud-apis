@@ -12,6 +12,17 @@ export class Order extends Document {
   item: Menu[];
   @Prop()
   total: number;
+
+  @Prop({ default: 'cash' })
+  paymentMethod: 'cash' | 'momo';
+  @Prop({ default: 'PENDING' })
+  paymentStatus: PaymentStatus;
+  @Prop()
+  momoOrderId?: string;
+  @Prop()
+  momoRequestId?: string;
+  @Prop()
+  momoTransId?: number;
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);
