@@ -16,7 +16,7 @@ import type { Response } from 'express';
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
-  @Post(':orderId')
+  @Post('create/:orderId')
   async createPayment(@Param('orderId') orderId: string) {
     return this.paymentsService.createMomoPayment(orderId);
   }

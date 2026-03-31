@@ -188,7 +188,7 @@
 
         try {
           const data = await handleResponse(
-            await fetch(`${PAYMENT_API}/${lastOrderId}`, { method: 'POST' }),
+            await fetch(`${PAYMENT_API}/create/${lastOrderId}`, { method: 'POST' }),
           );
           showMessage('Redirecting to MOMO...');
           if (data.payUrl) {

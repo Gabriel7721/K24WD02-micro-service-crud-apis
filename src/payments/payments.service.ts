@@ -101,7 +101,7 @@ export class PaymentsService {
       order.momoOrderId = momoOrderId;
       order.momoRequestId = requestId;
       order.paymentMethod = 'momo';
-      order.paymentStatus = 'PAID';
+      order.paymentStatus = 'PENDING';
       await order.save();
 
       return data;
@@ -158,11 +158,13 @@ export class PaymentsService {
       };
     }
 
-    if (Number(order.total) !== Number(body.amount)) {
+    const expectedAmount = this.convertedToVND(order.total)
+    if (Number(expectedAmount) !== Number(body.amount)) {
+      console.log("Amount mismatch");
       return { resultCode: 1, message: 'Amount mismatch' };
     }
 
-    if (body.resultCode === 0) {
+    if (Number(body.resultCode) === 0) {
       order.paymentStatus = 'PAID';
       order.momoTransId = body.transId;
       await order.save();
